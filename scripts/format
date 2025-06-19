@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+echo "==> Formatting files with Prettier"
+
+npx prettier *.{js,md} --write
