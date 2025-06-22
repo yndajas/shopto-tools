@@ -67,12 +67,12 @@ class Card {
   }
 
   silverDiscount() {
-    this._silverDiscount ||= new Discount(this.basePrice, this.value);
+    this._silverDiscount ||= new Discount(this.silverPrice, this.value);
     return this._silverDiscount;
   }
 
   goldDiscount() {
-    this._goldDiscount ||= new Discount(this.basePrice, this.value);
+    this._goldDiscount ||= new Discount(this.goldPrice, this.value);
     return this._goldDiscount;
   }
 
