@@ -31,93 +31,66 @@ class Discount {
 
 class Card {
   value;
-  basePrice;
-  silverPrice;
-  goldPrice;
-  #_baseDiscount;
-  #_silverDiscount;
-  #_goldDiscount;
+  price;
+  #_discount;
 
-  constructor(value, basePrice, silverPrice, goldPrice) {
+  constructor(value, price) {
     this.value = value;
-    this.basePrice = basePrice;
-    this.silverPrice = silverPrice;
-    this.goldPrice = goldPrice;
+    this.price = price;
   }
 
-  static fromHtmlElement(cardElement) {
+  static fromHtmlElement(cardElement, unformattedPrice) {
     const value = new Money({
       string: cardElement.querySelector(".cross_price").innerText,
     });
 
-    const [goldPrice, silverPrice] = Array.from(
-      cardElement.querySelectorAll(".memb-badge-container"),
-    ).map((element) => new Money({ string: element.innerText }));
-
-    const basePrice = new Money({
-      number: Number.parseFloat(((silverPrice.number / 99) * 100).toFixed(2)),
+    const price = new Money({
+      number: Number.parseFloat(unformattedPrice).toFixed(2),
     });
 
-    return new Card(value, basePrice, silverPrice, goldPrice);
+    return new Card(value, price);
   }
 
-  baseDiscount() {
-    this._baseDiscount ||= new Discount(this.basePrice, this.value);
-    return this._baseDiscount;
+  discount() {
+    this._discount ||= new Discount(this.price, this.value);
+    return this._discount;
   }
 
-  silverDiscount() {
-    this._silverDiscount ||= new Discount(this.silverPrice, this.value);
-    return this._silverDiscount;
-  }
-
-  goldDiscount() {
-    this._goldDiscount ||= new Discount(this.goldPrice, this.value);
-    return this._goldDiscount;
-  }
-
-  print({ extended } = { extended: false }) {
-    const logArgs = [
-      "",
-      this.value.string.replace(".00", "").padStart(4, " "),
-      "      ",
-      this.baseDiscount().string.padStart(6, " "),
-      "  ",
-      this.basePrice.string.padStart(7, " "),
-      "        ",
-    ];
-
-    if (extended) {
-      logArgs.push(
-        this.silverDiscount().string.padStart(6, " "),
-        "    ",
-        this.silverPrice.string.padStart(7, " "),
-        "      ",
-        this.goldDiscount().string.padStart(6, " "),
-        "  ",
-        this.goldPrice.string.padStart(7, " "),
-      );
-    }
-
-    console.log(...logArgs);
-  }
-}
-
-function printDiscounts({ extended } = { extended: false }) {
-  if (extended) {
+  print() {
     console.log(
-      "value  baseDiscount  basePrice  silverDiscount  silverPrice  goldDiscount  goldPrice",
+      ...[
+        "",
+        this.value.string.replace(".00", "").padStart(4, " "),
+        "  ",
+        this.discount().string.padStart(6, " "),
+        "",
+        this.price.string.padStart(7, " "),
+        "        ",
+      ],
     );
-  } else {
-    console.log("value  baseDiscount  basePrice");
   }
-
-  Array.from(document.querySelectorAll(".itemlist__info"))
-    .map(Card.fromHtmlElement)
-    .sort((a, b) => b.baseDiscount().number - a.baseDiscount().number)
-    .forEach((card) => card.print({ extended }));
 }
 
-console.log(`run one of:
-$ printDiscounts()
-$ printDiscounts({ extended: true })`);
+function printDiscounts(count, prices) {
+  const cardElements = Array.from(
+    document.querySelectorAll(".itemlist__info"),
+  ).slice(0, count);
+
+  if (!prices || prices.length !== cardElements.length) {
+    console.error("missing prices");
+    return;
+  }
+
+  console.log("value  discount    price");
+
+  cardElements
+    .map((element, index) => Card.fromHtmlElement(element, prices[index]))
+    .sort((a, b) => b.discount().number - a.discount().number)
+    .forEach((card) => card.print());
+}
+
+// update this as needed
+printDiscounts(
+  9,
+  [43.95, 84.13, 36.11, 58.65, 18.47, 9.65, 100.79, 127.25, 169.39],
+);
